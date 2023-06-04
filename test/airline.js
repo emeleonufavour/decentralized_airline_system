@@ -26,16 +26,63 @@ describe(
         );
         describe(
             "Functions", async function(){
-                it(
-                    "Able to add regulators", async function(){
+                describe(
+                    "Administrative priviledges", async function(){
+                      it(
+                    "Owner can change regulators", async function(){
                         const {airlineToken, addr1} = await loadFixture(deployTokenFixture);
-                        expect(await airlineToken.addRegulators(addr1.address)).
+                        expect(await airlineToken.changeRegulator(addr1.address)).
+                        to.not.be.revertedWith("Only the owner");
+                        }
+                      ); 
+                      it(
+                        "Owner can add admin", async function(){
+                            const {airlineToken, addr1} = await loadFixture(deployTokenFixture);
+                            expect(await airlineToken.addAdmin(addr1.address)).
+                            to.not.be.revertedWith("Only the owner");
+                            }
+                        ); 
+                        it(
+                            "Owner can remove admin", async function(){
+                                const {airlineToken, addr1} = await loadFixture(deployTokenFixture);
+                                await airlineToken.addAdmin(addr1.address);
+                                expect(await airlineToken.removeAdmin(addr1.address)).
+                                to.not.be.revertedWith("Only the owner");
+                            }
+                        ); 
+                        it(
+                            "Account is an admin", async function(){
+                                const {airlineToken, addr1} = await loadFixture(deployTokenFixture);
+                                await airlineToken.addAdmin(addr1.address);
+                                const adminStatus = await airlineToken.isAdmin(addr1.address);
+                                expect(adminStatus).to.be.true;
+                            }
+                        ); 
+                        it(
+                            "Account is the regulator", async function(){
+                                const {airlineToken, addr1} = await loadFixture(deployTokenFixture);
+                                await airlineToken.changeRegulator(
+                                    addr1.address
+                                );
+                                const regulatorStatus = await airlineToken.isRegulator(addr1.address);
+                                expect(regulatorStatus).to.be.true;
+                            }
+                        ); 
+                    }
+                );
+                
+                it(
+                    "Able to set seat price", async function(){
+                        const {airlineToken} = await loadFixture(deployTokenFixture);
+                        expect(await airlineToken.setSeatPrice(1000)).
                         to.not.be.revertedWith("Only the owner");
                     }
                 );
                 it(
-                    "Able to set seat price", async function(){
-                        
+                    "", async function(){
+                        const {airlineToken} = await loadFixture(deployTokenFixture);
+                        expect(await airlineToken.setSeatPrice(1000)).
+                        to.not.be.revertedWith("Only the owner");
                     }
                 );
             }

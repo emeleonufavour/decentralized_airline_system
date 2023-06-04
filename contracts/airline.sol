@@ -12,7 +12,6 @@ contract Airline {
 
     bytes32 public flightId;
 
-    // create a struct for the details of the seat
     struct Seat {
         bytes32 uuid;
         address owner;
@@ -21,11 +20,10 @@ contract Airline {
     }
     Seat[] public _seats;
 
-    // make up mappings to tracking things
-
     mapping(address => uint[]) public _ownerSeats;
     mapping(bytes32 => uint) public _sentIndexFromuuid;
     mapping(address => uint) public _passengerSeat;
+    mapping(address => bool) public _admin;
 
     uint private _skippedSeats;
 
@@ -46,9 +44,10 @@ contract Airline {
         _owner = msg.sender;
         _flightId = "JQ570";
         _status = FlightStatus.Presale;
+        _admin[msg.sender] = true;
     }
 
-    // modifiers declaration for security considerations
+    // modifiers
     modifier hasTicket() {
         require(
             _ownerSeats[msg.sender].length > 0,
@@ -94,23 +93,60 @@ contract Airline {
         _;
     }
 
-    // first declare admin functions
+    modifier onlyOwner() {
+        require(
+            msg.sender == _owner,
+            "Only owner is allowed to call this function"
+        );
+        _;
+    }
+
+    modifier onlyAdmin(address adminAddress) {
+        require(
+            _admin[adminAddress] == true,
+            "Only admins can perform this function"
+        );
+        _;
+    }
 
     // setter functions
 
-    function addRegulators(address regulator) public {
-        require(msg.sender == _owner, "Only the owner ");
-        // so you can pass addresses
+    ///@dev this function is used to set an address as a regulator
+    ///@param regulator the address to be assigned as a regulator
+    function changeRegulator(
+        address regulator
+    ) public onlyOwner onlyAdmin(msg.sender) {
         _regulator = regulator;
     }
 
-    function setSeatPrice(uint seatPrice) public {
-        require(msg.sender == _owner, "Only the owner ");
+    ///@dev this function checks if an account is the regulator
+    ///@param regulator the address to check if it is a regulator
+    function isRegulator(address regulator) public view returns (bool) {
+        assert(regulator == _regulator);
+        return true;
+    }
+
+    ///@dev this function is used to add an address as an admin to the contract
+    ///@param addressToAdd the address to add as an admin
+    function addAdmin(address addressToAdd) public onlyOwner {
+        _admin[addressToAdd] = true;
+    }
+
+    ///@dev this function is used to remove an address as an admin to the contract
+    ///@param addressToRemove the address to remove as an admin
+    function removeAdmin(address addressToRemove) public onlyOwner {
+        _admin[addressToRemove] = false;
+    }
+
+    function isAdmin(address addr) public view returns (bool) {
+        return _admin[addr];
+    }
+
+    function setSeatPrice(uint seatPrice) public onlyOwner {
         _seatPrice = seatPrice;
     }
 
-    function setFlightId(bytes32 flightId) public {
-        require(msg.sender == _owner, "Only the owner ");
+    function setFlightId(bytes32 flightId) public onlyOwner {
         _flightId = flightId;
     }
 
